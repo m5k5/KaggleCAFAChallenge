@@ -51,11 +51,12 @@ class DiceLoss(Loss):
 # a value smaller than 0.5, FP are penalized more than FN
 class WeightedComboLoss(Loss):
     # initialize instance attributes
-    def __init__(self, labelWeights, alpha=0.5, beta=0.5):
+    def __init__(self, labelWeights, alpha=0.5, beta=0.5, labelSmoothing=0.0):
         super(WeightedComboLoss, self).__init__()
         self.classWeights = tf.constant(labelWeights, dtype=tf.dtypes.float32)
         self.alpha = tf.constant(alpha, dtype=tf.dtypes.float32)
         self.beta = tf.constant(beta, dtype=tf.dtypes.float32)
+        self.labelSmoothing = tf.constant(labelSmoothing, dtype=tf.dtypes.float32)
 
     # Compute loss
     def call(self, y_true, y_pred, smooth=1e-6):
@@ -72,6 +73,8 @@ class WeightedComboLoss(Loss):
         y_pred = tf.clip_by_value(
             y_pred, tf.keras.backend.epsilon(), 1 - tf.keras.backend.epsilon()
         )
+        if self.labelSmoothing > 0:
+            y_true = y_true * (1 - self.labelSmoothing) + self.labelSmoothing / 2
         term_0 = tf.math.multiply(
             (1 - self.beta) * self.classWeights * tf.math.subtract(1.0, y_true),
             tf.math.log(tf.math.subtract(1.0, y_pred) + tf.keras.backend.epsilon()),
