@@ -26,7 +26,7 @@ class WeightedBinaryCE(Loss):
             self.classWeights * y_true, tf.math.log(y_pred + tf.keras.backend.epsilon())
         )
         losses = term_0 + term_1
-        return -tf.reduce_mean(losses, axis=0)
+        return -tf.reduce_sum(losses, axis=0) / tf.reduce_sum(self.classWeights)
 
 
 class DiceLoss(Loss):
@@ -84,7 +84,7 @@ class WeightedComboLoss(Loss):
             tf.math.log(y_pred + tf.keras.backend.epsilon()),
         )
         losses = term_0 + term_1
-        weightedCE = -tf.reduce_mean(losses, axis=0)
+        weightedCE = -tf.reduce_sum(losses, axis=0) / tf.reduce_sum(self.classWeights)
 
         combo = (self.alpha * weightedCE) - ((1 - self.alpha) * dice)
 
